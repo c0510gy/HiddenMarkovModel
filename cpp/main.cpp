@@ -12,7 +12,7 @@ ostream& operator<<(ostream& os, const vector<int>& dt){
 }
 
 int main(){
-  HMM hmm(2);
+  HMM hmm(2, 2);
   vector<ldb> init{
     0.5, 0.5
   };

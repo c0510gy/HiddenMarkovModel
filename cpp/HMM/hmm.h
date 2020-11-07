@@ -19,7 +19,7 @@ private:
   void backward(std::vector<int>& O, std::vector<std::vector<long double>>& beta);
 
 public:
-  HMM(int N);
+  HMM(int N, int M);
 
   void setInitial(std::vector<long double>& initial);
   void setTransition(std::vector<std::vector<long double>>& transition);
