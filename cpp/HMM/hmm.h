@@ -10,6 +10,7 @@
 class HMM{
 private:
   int N; // Number of hidden states
+  int M; // Number of obervation symbols
   std::vector<long double> initial;
   std::vector<std::vector<long double>> transition;
   std::vector<std::vector<long double>> emission;
@@ -31,8 +32,9 @@ public:
   void train(std::vector<int>& O);
 };
 
-HMM::HMM(int N){
+HMM::HMM(int N, int M){
   this->N = N;
+  this->M = M;
 }
 void HMM::setInitial(std::vector<long double>& initial){
   this->initial.clear();
@@ -149,7 +151,86 @@ std::vector<int> HMM::decode(std::vector<int>& O){
 }
 
 void HMM::train(std::vector<int>& O){
+  int T = O.size();
+
+  std::vector<std::vector<long double>> alpha, beta;
+  forward(O, alpha);
+  backward(O, beta);
+
+  std::vector<std::vector<std::vector<long double>>> xi;
+  xi.resize(T - 1);
+  for(int t = 0; t < T - 1; ++t){
+    xi[t].resize(N);
+    for(int i = 0; i < N; ++i)
+      xi[t][i].resize(N);
+  }
   
+  for(int t = 0; t < T - 1; ++t){
+    long double OProb = 0;
+    for(int j = 0; j < N; ++j)
+      OProb += alpha[t][j] * beta[t][j];
+    
+    for(int i = 0; i < N; ++i)
+      for(int j = 0; j < N; ++j){
+        xi[t][i][j] = alpha[t][i] * transition[i][j] * emission[j][O[t + 1]] * beta[t + 1][j];
+        xi[t][i][j] /= OProb;
+      }
+  }
+
+  std::vector<std::vector<long double>> a;
+  a.resize(N);
+  for(int i = 0; i < N; ++i)
+    a[i].resize(N);
+  
+  for(int i = 0; i < N; ++i){
+    for(int j = 0; j < N; ++j){
+      long double numerator = 0;
+      long double denominator = 0;
+
+      for(int t = 0; t < T - 1; ++t)
+        numerator += xi[t][i][j];
+      
+      for(int t = 0; t < T - 1; ++t)
+        for(int k = 0; k < N; ++k)
+          denominator += xi[t][i][k];
+      
+      a[i][j] = numerator / denominator;
+    }
+  }
+
+  std::vector<std::vector<long double>> gamma;
+  gamma.resize(T);
+  for(int t = 0; t < T; ++t)
+    gamma[t].resize(N);
+  
+  for(int t = 0; t < T; ++t){
+    long double OProb = 0;
+    for(int j = 0; j < N; ++j)
+      OProb += alpha[t][j] * beta[t][j];
+    
+    for(int j = 0; j < N; ++j)
+      gamma[t][j] = alpha[t][j] * beta[t][j] / OProb;
+  }
+
+  std::vector<std::vector<long double>> b;
+  b.resize(N);
+  for(int j = 0; j < N; ++j)
+    b[j].resize(M);
+  
+  for(int j = 0; j < N; ++j){
+    long double totProb = 0;
+    for(int t = 0; t < T; ++t)
+      totProb += gamma[t][j];
+    
+    for(int t = 0; t < T; ++t)
+      b[j][O[t]] += gamma[t][j];
+
+    for(int i = 0; i < M; ++i)
+      b[j][i] /= totProb;
+  }
+
+  transition = a;
+  emission = b;
 }
 
 #endif
