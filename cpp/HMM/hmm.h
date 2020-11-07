@@ -14,6 +14,9 @@ private:
   std::vector<std::vector<long double>> transition;
   std::vector<std::vector<long double>> emission;
 
+  void forward(std::vector<int>& O, std::vector<std::vector<long double>>& alpha);
+  void backward(std::vector<int>& O, std::vector<std::vector<long double>>& beta);
+
 public:
   HMM(int N);
 
@@ -24,6 +27,8 @@ public:
   long double getLikelihood(std::vector<int>& O);
 
   std::vector<int> decode(std::vector<int>& O);
+
+  void train(std::vector<int>& O);
 };
 
 HMM::HMM(int N){
@@ -53,9 +58,11 @@ void HMM::setEmission(std::vector<std::vector<long double>>& emission){
   }
 }
 
-long double HMM::getLikelihood(std::vector<int>& O){
+void HMM::forward(std::vector<int>& O, std::vector<std::vector<long double>>& alpha){
   int T = O.size();
-  std::vector<std::vector<long double>> alpha(T);
+
+  alpha.clear();
+  alpha.resize(T);
   for(int t = 0; t < T; ++t) alpha[t].resize(N);
 
   for(int j = 0; j < N; ++j)
@@ -67,6 +74,31 @@ long double HMM::getLikelihood(std::vector<int>& O){
         alpha[t][j] += alpha[t - 1][i] * transition[i][j] * emission[j][O[t]];
     }
   }
+}
+void HMM::backward(std::vector<int>& O, std::vector<std::vector<long double>>& beta){
+  int T = O.size();
+
+  beta.clear();
+  beta.resize(T);
+  for(int t = 0; t < T; ++t) beta[t].resize(N);
+
+  for(int i = 0; i < N; ++i)
+    beta[T - 1][i] = 1;
+  for(int t = T - 2; t >= 0; --t){
+    for(int i = 0; i < N; ++i){
+      beta[t][i] = 0;
+      for(int j = 0; j < N; ++j)
+        beta[t][i] += transition[i][j] * emission[j][O[t + 1]] * beta[t + 1][j];
+    }
+  }
+}
+
+long double HMM::getLikelihood(std::vector<int>& O){
+  int T = O.size();
+  std::vector<std::vector<long double>> alpha;
+  
+  forward(O, alpha);
+
   long double p = 0;
   for(int i = 0; i < N; ++i)
     p += alpha[T - 1][i];
@@ -114,6 +146,10 @@ std::vector<int> HMM::decode(std::vector<int>& O){
     estQ[t] = bt[t + 1][estQ[t + 1]];
   
   return estQ;
+}
+
+void HMM::train(std::vector<int>& O){
+  
 }
 
 #endif
