@@ -25,6 +25,10 @@ public:
   void setTransition(std::vector<std::vector<long double>>& transition);
   void setEmission(std::vector<std::vector<long double>>& emission);
 
+  std::vector<long double> getInitial();
+  std::vector<std::vector<long double>> getTransition();
+  std::vector<std::vector<long double>> getEmission();
+
   long double getLikelihood(std::vector<int>& O);
 
   std::vector<int> decode(std::vector<int>& O);
@@ -58,6 +62,16 @@ void HMM::setEmission(std::vector<std::vector<long double>>& emission){
       arr.push_back(emission[j][i]);
     this->emission.push_back(arr);
   }
+}
+
+std::vector<long double> HMM::getInitial(){
+  return initial;
+}
+std::vector<std::vector<long double>> HMM::getTransition(){
+  return transition;
+}
+std::vector<std::vector<long double>> HMM::getEmission(){
+  return emission;
 }
 
 void HMM::forward(std::vector<int>& O, std::vector<std::vector<long double>>& alpha){
