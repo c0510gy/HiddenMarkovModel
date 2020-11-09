@@ -11,6 +11,15 @@ ostream& operator<<(ostream& os, const vector<int>& dt){
   return os;
 }
 
+ostream& operator<<(ostream& os, const vector<vector<long double>>& dt){
+  for(auto t: dt){
+    for(auto tt: t)
+      os << tt << " ";
+    os << "\n";
+  }
+  return os;
+}
+
 int main(){
   HMM hmm(2, 2);
   vector<ldb> init{
@@ -51,6 +60,9 @@ int main(){
     cout << hmm.decode(O1) << endl;
     cout << hmm.decode(O2) << endl;
     cout << hmm.decode(O3) << endl;
+
+    cout << hmm.getTransition() << endl;
+    cout << hmm.getEmission() << endl;
   }
   return 0;
 }
